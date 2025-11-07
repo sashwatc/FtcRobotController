@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.mechanisms.KitTurretControl;
 import org.firstinspires.ftc.teamcode.mechanisms.MechanumDrive;
-@TeleOp(name ="FieldOrientedOp")
+@TeleOp(name ="KitBotOpModeDecode")
 public class KitBotOpMode extends OpMode {
 
     MechanumDrive drive = new MechanumDrive();
