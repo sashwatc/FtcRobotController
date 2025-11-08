@@ -33,7 +33,7 @@ public class Limelight {
     // ------------------- Internal helper -------------------
     private double getValue(String key) {
         try {
-            URL url = new URL("http://" + limelightIP + ":5807/limelight/json");
+            URL url = new URL("http://" + limelightIP + ":5801/limelight/json");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
 
