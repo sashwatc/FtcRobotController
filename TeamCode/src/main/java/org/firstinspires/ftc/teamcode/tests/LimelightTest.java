@@ -10,7 +10,7 @@ import org.firstinspires.ftc.teamcode.vision.Limelight;
 public class LimelightTest extends LinearOpMode {
     @Override
     public void runOpMode() {
-        Limelight limelight = new Limelight("172.29.0.2");
+        Limelight limelight = new Limelight("172.29.0.1");
 
         waitForStart();
 

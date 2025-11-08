@@ -24,7 +24,7 @@ public class KitBotOpMode extends OpMode {
         drive.init(hardwareMap);
         turret.init(hardwareMap);
 
-        limelight = new Limelight("172.29.0.2"); // <-- replace with Limelight IP
+        limelight = new Limelight("172.29.0.1"); // <-- replace with Limelight IP
         autoAim = new TurretAutoAim(turret, limelight, kP_pitch, 20);//edit tag here
 
         telemetry.addLine("✅ KitBot Initialized — ready to run");
