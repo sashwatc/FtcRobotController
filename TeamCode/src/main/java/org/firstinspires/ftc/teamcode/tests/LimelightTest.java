@@ -36,12 +36,14 @@ public class LimelightTest extends LinearOpMode {
                 telemetry.addData("Area (ta)", result.getTa());
 
                 // Parse the JSON string to get AprilTag ID
+                // Parse the JSON string to get AprilTag ID
                 try {
                     JSONObject json = new JSONObject(result.toString());
                     JSONArray fiducials = json.optJSONArray("Fiducial"); // array of tags
                     if (fiducials != null && fiducials.length() > 0) {
                         JSONObject firstTag = fiducials.getJSONObject(0);
-                        int tagId = firstTag.optInt("id", -1);
+                        // Try both keys in case SDK uses "fid" or "id"
+                        int tagId = firstTag.optInt("fid", firstTag.optInt("id", -1));
                         telemetry.addData("AprilTag ID", tagId);
                     } else {
                         telemetry.addData("AprilTag ID", "None detected");
