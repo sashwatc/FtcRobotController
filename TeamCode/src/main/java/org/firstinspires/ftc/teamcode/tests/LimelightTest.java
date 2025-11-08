@@ -9,7 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-@TeleOp(name="Limelight Test - AprilTag JSON")
+@TeleOp(name="Limelight Test")
 public class LimelightTest extends LinearOpMode {
 
     private Limelight3A limelight;
