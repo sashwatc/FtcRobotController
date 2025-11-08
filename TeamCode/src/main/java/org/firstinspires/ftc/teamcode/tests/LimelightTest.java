@@ -1,58 +1,61 @@
 package org.firstinspires.ftc.teamcode.tests;
 
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-@TeleOp(name = "Limelight Test")
-public class LimelightTest extends OpMode {
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+@TeleOp(name="Limelight Test - AprilTag JSON")
+public class LimelightTest extends LinearOpMode {
 
     private Limelight3A limelight;
 
     @Override
-    public void init() {
-        // Get the Limelight from the hardware map.
-        // Make sure the name "limelight" matches what you configured in the Driver Station.
+    public void runOpMode() {
+        // Initialize Limelight
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-
-        // Optional: Set how often data is requested from the Limelight (e.g., 100 times per second).
         limelight.setPollRateHz(100);
+        limelight.start();
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-    }
 
-    @Override
-    public void start() {
-        // Start the Limelight vision processing.
-        limelight.start();
+        waitForStart();
 
-        // Switch to a specific pipeline if needed (e.g., pipeline 0).
-        // Pipelines are configured in the Limelight's web interface.
-        limelight.pipelineSwitch(0);
-    }
+        while (opModeIsActive()) {
+            LLResult result = limelight.getLatestResult();
 
-    @Override
-    public void loop() {
-        // Get the latest result from the Limelight.
-        LLResult result = limelight.getLatestResult();
+            if (result != null && result.isValid()) {
+                telemetry.addData("Target Visible", true);
+                telemetry.addData("X Offset (tx)", result.getTx());
+                telemetry.addData("Y Offset (ty)", result.getTy());
+                telemetry.addData("Area (ta)", result.getTa());
 
-        // Check if the result is valid before using it.
-        if (result != null && result.isValid()) {
-            telemetry.addData("Pipeline Index", result.getPipelineIndex());
-            telemetry.addData("Target X", result.getTx()); // Horizontal offset from crosshair
-            telemetry.addData("Target Y", result.getTy()); // Vertical offset from crosshair
-            telemetry.addData("Target Area", result.getTa()); // Area of the target
-        } else {
-            telemetry.addData("Result", "No valid data");
+                // Parse the JSON string to get AprilTag ID
+                try {
+                    JSONObject json = new JSONObject(result.toString());
+                    JSONArray fiducials = json.optJSONArray("Fiducial"); // array of tags
+                    if (fiducials != null && fiducials.length() > 0) {
+                        JSONObject firstTag = fiducials.getJSONObject(0);
+                        int tagId = firstTag.optInt("id", -1);
+                        telemetry.addData("AprilTag ID", tagId);
+                    } else {
+                        telemetry.addData("AprilTag ID", "None detected");
+                    }
+                } catch (JSONException e) {
+                    telemetry.addData("AprilTag ID", "Error parsing JSON");
+                }
+
+            } else {
+                telemetry.addData("Target Visible", false);
+                telemetry.addData("AprilTag ID", "N/A");
+            }
+
+            telemetry.update();
         }
-        telemetry.update();
-    }
-
-    @Override
-    public void stop() {
-        // Stop the Limelight when the OpMode is finished.
-        limelight.stop();
     }
 }
