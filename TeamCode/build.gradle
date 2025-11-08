@@ -28,5 +28,4 @@ android {
 
 dependencies {
     implementation project(':FtcRobotController')
-    implementation 'org.limelightvision:limelight-ftc:1.0.0'
 }
