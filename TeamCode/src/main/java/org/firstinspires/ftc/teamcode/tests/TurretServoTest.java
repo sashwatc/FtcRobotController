@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.mechanisms.KitTurretControl;
 
+@TeleOp(name="TurretServoTest")
 public class TurretServoTest extends OpMode {
     KitTurretControl turret = new KitTurretControl();
 
