@@ -20,6 +20,7 @@ public class KitTurretControl {
     }
 
     private void setPitchPosition(double position) {
+        position = Math.max(0.0, Math.min(1.0, position));
         leftPitchServo.setPosition(position);
         rightPitchServo.setPosition(1.0 - position);
     }
@@ -54,10 +55,10 @@ public class KitTurretControl {
         }
     }
 
-    public void turretPitch(double stickY) {
-        double delta = stickY * PITCH_SPEED; //may have to invert
+    public void turretPitch(double stickY){ // stickY can be manual joystick or auto-correction from TurretAutoAim
+        double delta = -stickY * PITCH_SPEED; // may be inverted
         pitchPosition += delta;
-        pitchPosition = Math.max(0.0, Math.min(1.0, pitchPosition)); // Clamp to [0,1]
+        pitchPosition = Math.max(0.0, Math.min(1.0, pitchPosition));
         setPitchPosition(pitchPosition);
     }
 
