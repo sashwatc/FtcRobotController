@@ -8,13 +8,14 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.SerialNumber;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
-@Autonomous
+@TeleOp
 public class LimelightTest extends OpMode{
 
     private Limelight3A limelight;
@@ -48,6 +49,7 @@ public class LimelightTest extends OpMode{
             telemetry.addData("Target Area", llResult.getTa());
             telemetry.addData("BotPose", botPose.toString());
             telemetry.addData("Yaw", botPose.getOrientation().getYaw());
+            telemetry.addData("Pitch", botPose.getOrientation().getPitch());
 
         }
     }
