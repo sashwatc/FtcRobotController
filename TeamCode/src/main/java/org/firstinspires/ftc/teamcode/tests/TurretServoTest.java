@@ -2,36 +2,37 @@ package org.firstinspires.ftc.teamcode.tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.mechanisms.KitTurretControl;
-
-@TeleOp(name="TurretPitchServoTest")
+@TeleOp(name="SimpleServoDirectTest")
 public class TurretServoTest extends OpMode {
 
-    KitTurretControl turret = new KitTurretControl();
+    private Servo leftPitchServo, rightPitchServo;
 
     @Override
     public void init() {
-        turret.init(hardwareMap);
+        leftPitchServo  = hardwareMap.get(Servo.class, "leftPitchServo");
+        rightPitchServo = hardwareMap.get(Servo.class, "rightPitchServo");
 
-        telemetry.addLine("✅ Turret Pitch Servo Test Loaded");
-        telemetry.addLine("Use GAMEPAD2 Right Stick Y to move servos");
-        telemetry.addLine("Servos should tilt together (mirrored)");
+        telemetry.addLine("Loaded Simple Servo Test");
+        telemetry.addLine("Right Stick Y = Servo position");
+        telemetry.addLine("Stick up -> 1.0, Stick down -> 0.0");
         telemetry.update();
     }
 
     @Override
     public void loop() {
 
-        // manual test input
-        double stickY = gamepad2.right_stick_y;
+        // Convert stick from [-1..1] to [0..1]
+        double raw = gamepad2.right_stick_y;
+        double pos = (raw + 1) / 2.0;
 
-        // move the pitch servos
-        turret.turretPitch(stickY);
+        // Set servos directly
+        leftPitchServo.setPosition(pos);
+        rightPitchServo.setPosition(pos);
 
-        // show feedback
-        telemetry.addData("StickY", stickY);
-        telemetry.addData("PitchPosition", turret.getPitchPosition());
+        telemetry.addData("Stick Raw", raw);
+        telemetry.addData("Servo Position", pos);
         telemetry.update();
     }
 }

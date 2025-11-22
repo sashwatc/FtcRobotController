@@ -5,47 +5,45 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
+/**
+ * Turret subsystem:
+ * - controls two mirrored pitch servos (left increases to go up, right mirrored)
+ * - controls two flywheel motors (left/right row motors)
+ * - provides manual incremental turretPitch(stickY) and absolute setPitchAbsolute(pos)
+ */
 public class KitTurretControl {
 
     private DcMotor leftRowMotor, rightRowMotor;
     private Servo leftPitchServo, rightPitchServo;
-    private double pitchPosition = 0.5; // servo position (0..1)
-    private final double PITCH_SPEED = 0.01; // manual sensitivity
 
+    // pitch is stored as absolute servo position (0..1). Center = 0.5.
+    private double pitchPosition = 0.5;
+    private final double PITCH_SPEED = 0.01; // incremental speed per loop for manual control
+
+    public void init(HardwareMap hwMap) {
+        // motors
+        leftRowMotor = hwMap.get(DcMotor.class, "leftRowMotor");
+        rightRowMotor = hwMap.get(DcMotor.class, "rightRowMotor");
+        leftRowMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightRowMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftRowMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightRowMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        // servos (names must match your DS config)
+        leftPitchServo  = hwMap.get(Servo.class, "leftPitchServo");
+        rightPitchServo = hwMap.get(Servo.class, "rightPitchServo");
+
+        // initialize to centered position
+        setPitchPosition(pitchPosition);
+    }
+
+    /** Stop flywheels */
     public void stop() {
         if (leftRowMotor != null) leftRowMotor.setPower(0);
         if (rightRowMotor != null) rightRowMotor.setPower(0);
     }
 
-    private void setPitchPosition(double position) {
-        position = Math.max(0.0, Math.min(1.0, position));
-        // left servo normal, right servo mirrored
-        leftPitchServo.setPosition(position);
-        rightPitchServo.setPosition(1.0 - position);
-        pitchPosition = position;
-    }
-
-    public void init(HardwareMap hwMap) {
-        leftRowMotor = hwMap.get(DcMotor.class, "leftRowMotor");
-        rightRowMotor = hwMap.get(DcMotor.class, "rightRowMotor");
-
-        rightRowMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        leftRowMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        leftRowMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rightRowMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        leftPitchServo = hwMap.get(Servo.class, "leftPitchServo");
-        rightPitchServo = hwMap.get(Servo.class, "rightPitchServo");
-
-        // start centered
-        setPitchPosition(pitchPosition);
-
-        stop();
-    }
-
-    /**
-     * Flywheel control (left/right rollers) using triggers.
-     */
+    /** Flywheel control (left/right rollers) using triggers (0..1) */
     public void runWithTriggers(double leftTrigger, double rightTrigger) {
         if (leftTrigger > 0.05 && rightTrigger <= 0.05) {
             leftRowMotor.setPower(leftTrigger);
@@ -58,10 +56,17 @@ public class KitTurretControl {
         }
     }
 
-    /**
-     * Manual pitch control called with joystick Y. Keeps internal state.
-     * stickY typically from -1..1 (gamepad stick)
-     */
+    /** Internal: apply mirrored positions to real servos.
+     *  LEFT: position (increase => CCW => turret up)
+     *  RIGHT: mirrored (1 - position) so it rotates CW when LEFT goes CCW */
+    private void setPitchPosition(double position) {
+        position = Math.max(0.0, Math.min(1.0, position));
+        leftPitchServo.setPosition(position);
+        rightPitchServo.setPosition(1.0 - position);
+        pitchPosition = position;
+    }
+
+    /** Manual incremental turret control (stickY from -1..1). Uses internal PITCH_SPEED. */
     public void turretPitch(double stickY) {
         double delta = -stickY * PITCH_SPEED; // invert if needed
         double newPos = pitchPosition + delta;
@@ -69,19 +74,14 @@ public class KitTurretControl {
         setPitchPosition(newPos);
     }
 
-    /**
-     * Called by auto-aim. Sets **absolute** servo position (0..1).
-     * This avoids the servos fighting each other.
-     */
+    /** Called by auto-aim: set an absolute position (0..1). */
     public void setPitchAbsolute(double absolutePosition) {
         if (Double.isNaN(absolutePosition)) return;
         absolutePosition = Math.max(0.0, Math.min(1.0, absolutePosition));
         setPitchPosition(absolutePosition);
     }
 
-    /**
-     * Returns the last-known servo position (0..1).
-     */
+    /** Get the current stored pitch position (0..1). */
     public double getPitchPosition() {
         return pitchPosition;
     }
