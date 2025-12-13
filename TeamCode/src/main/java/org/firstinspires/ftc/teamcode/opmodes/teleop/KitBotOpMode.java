@@ -86,8 +86,8 @@ public class KitBotOpMode extends OpMode {
         }
 
         // Manual hard limits test
-        if (gamepad2.dpad_up) turret.setPitchAbsolute(1.0);
-        if (gamepad2.dpad_down) turret.setPitchAbsolute(0.0);
+        //if (gamepad2.dpad_up) turret.setPitchAbsolute(1.0);
+        //if (gamepad2.dpad_down) turret.setPitchAbsolute(0.0);
 
         /* ===================== TELEMETRY ===================== */
         telemetry.addLine("=== DRIVE ===");
