@@ -8,7 +8,7 @@ import org.firstinspires.ftc.teamcode.mechanisms.KitTurretControl;
 import org.firstinspires.ftc.teamcode.mechanisms.MechanumDrive;
 import org.firstinspires.ftc.teamcode.vision.TurretAutoAim;
 
-@Autonomous(name = "KitBotAuto", group = "Competition")
+@Autonomous(name = "auto", group = "Competition")
 public class KitBotAuto extends LinearOpMode {
 
     // ========== STATE DEFINITIONS ==========
