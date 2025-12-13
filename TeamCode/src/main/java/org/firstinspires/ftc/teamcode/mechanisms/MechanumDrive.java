@@ -57,7 +57,7 @@ public class MechanumDrive {
     }
 
     public void driveFeildRelative(double forward, double strafe, double rotate){
-        double theta = Math.atan2(forward, strafe);
+        double theta = Math.atan2(strafe, forward);
         double r = Math.hypot(strafe, forward);
         theta = AngleUnit.normalizeRadians(theta - imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
 
