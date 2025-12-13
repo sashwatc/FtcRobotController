@@ -13,7 +13,7 @@ public class MechanumDrive {
 
     private DcMotor frontLeftMotor, backLeftMotor, frontRightMotor, backRightMotor;
     private IMU imu;
-    private double speedMultiplier = 0.8;
+    private double speedMultiplier = 0.9;
 
     public void init(HardwareMap hwMap) {
         frontLeftMotor = hwMap.get(DcMotor.class, "frontLeftMotor");

@@ -15,7 +15,7 @@ public class KitBotAuto extends LinearOpMode {
     private enum AutoState {
         INIT,
         DRIVE_TO_POSITION,
-        SCAN_FOR_TARGET,
+       SCAN_FOR_TARGET,
         AIM_AT_TARGET,
         SHOOT,
         RESET_TURRET,
@@ -91,7 +91,7 @@ public class KitBotAuto extends LinearOpMode {
                     }
                     break;
 
-                // ===== STATE 3: SCAN FOR APRILTAG =====
+       /*         // ===== STATE 3: SCAN FOR APRILTAG =====
                 case SCAN_FOR_TARGET:
                     telemetry.addData("State", "SCAN_FOR_TARGET");
                     telemetry.addData("Scan Time", "%.1f/3.0 sec", scanTimer.seconds());
@@ -134,7 +134,7 @@ public class KitBotAuto extends LinearOpMode {
                     }
                     break;
 
-                // ===== STATE 4: AIM AT TARGET =====
+           /*     // ===== STATE 4: AIM AT TARGET =====
                 case AIM_AT_TARGET:
                     telemetry.addData("State", "AIM_AT_TARGET");
 
@@ -163,7 +163,7 @@ public class KitBotAuto extends LinearOpMode {
                     }
                     break;
 
-                // ===== STATE 5: SHOOT =====
+           /*     // ===== STATE 5: SHOOT =====
                 case SHOOT:
                     telemetry.addData("State", "SHOOT");
                     telemetry.addData("Shoot Time", "%.1f/1.5 sec", shootTimer.seconds());
@@ -180,7 +180,7 @@ public class KitBotAuto extends LinearOpMode {
                     break;
 
                 // ===== STATE 6: RESET TURRET =====
-                case RESET_TURRET:
+                /*  case RESET_TURRET:
                     telemetry.addData("State", "RESET_TURRET");
 
                     // Disable auto-aim
@@ -195,7 +195,7 @@ public class KitBotAuto extends LinearOpMode {
                         stateTimer.reset();
                     }
                     break;
-
+*/
                 // ===== STATE 7: PARK =====
                 case PARK:
                     telemetry.addData("State", "PARK");

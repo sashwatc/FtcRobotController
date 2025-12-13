@@ -6,95 +6,100 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
 public class KitTurretControl {
-    // 4 MOTORS (2 left, 2 right)
     private DcMotor leftMotor1, leftMotor2, rightMotor1, rightMotor2;
     private Servo leftPitchServo, rightPitchServo;
 
-    // Power multiplier - set this once, triggers control speed
-    private double powerMultiplier = 1.5;  // Fixed multiplier (1.5 = 150% power)
-    private final double MIN_POWER = 0.05; // Deadzone threshold
+    // Left trigger: leftMotor1/rightMotor1 at 20%, leftMotor2/rightMotor2 at full speed
+    // Right trigger: all 4 motors normal speed
+    private final double LEFT_TRIGGER_MOTOR1_SPEED = 0.5; // Fixed 20% for motor1 pair
+    private double rightTriggerMultiplier = 1.0;           // Multiplier for right trigger
+    private final double MIN_POWER = 0.05;
     private final double PITCH_SPEED = 0.01;
 
     private double pitchPosition = 0.5;
 
     public void init(HardwareMap hwMap) {
-        // Initialize 4 motors
         leftMotor1 = hwMap.get(DcMotor.class, "leftMotor1");
         leftMotor2 = hwMap.get(DcMotor.class, "leftMotor2");
         rightMotor1 = hwMap.get(DcMotor.class, "rightMotor1");
         rightMotor2 = hwMap.get(DcMotor.class, "rightMotor2");
 
-        // Set motor modes for max speed
         leftMotor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         leftMotor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightMotor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightMotor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        // Let flywheels spin down naturally
         leftMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         leftMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         rightMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         rightMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        // Set directions
         leftMotor1.setDirection(DcMotorSimple.Direction.FORWARD);
         leftMotor2.setDirection(DcMotorSimple.Direction.FORWARD);
         rightMotor1.setDirection(DcMotorSimple.Direction.FORWARD);
         rightMotor2.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        // Pitch servos
         leftPitchServo = hwMap.get(Servo.class, "leftPitchServo");
         rightPitchServo = hwMap.get(Servo.class, "rightPitchServo");
 
         setPitchPosition(pitchPosition);
     }
 
-    // Triggers control speed (0 to 1), powerMultiplier scales it
     public void runWithTriggers(double leftTrigger, double rightTrigger) {
-        // Triggers are already 0-1, just apply the fixed multiplier
-        leftTrigger *= powerMultiplier;
-        rightTrigger *= powerMultiplier;
-
-        // Clamp to valid range
-        leftTrigger = Math.min(1.0, Math.max(0.0, leftTrigger));
-        rightTrigger = Math.min(1.0, Math.max(0.0, rightTrigger));
-
         if (leftTrigger > MIN_POWER && rightTrigger <= MIN_POWER) {
-            // Left trigger: left motors FORWARD, right motors REVERSE
-            leftMotor1.setPower(leftTrigger);
-            leftMotor2.setPower(leftTrigger);
-            rightMotor1.setPower(-leftTrigger);
-            rightMotor2.setPower(-leftTrigger);
+            // LEFT TRIGGER: All 4 motors run
+            // leftMotor1 and rightMotor1 at 20% speed
+            // leftMotor2 and rightMotor2 at full trigger speed
+            double power1 = LEFT_TRIGGER_MOTOR1_SPEED; // Fixed 20% for motor1 pair
+            double power2 = leftTrigger;               // Variable speed for motor2 pair
+
+            // Apply right trigger multiplier if you want motor2 pair to also be scaled
+            // power2 *= rightTriggerMultiplier; // Uncomment if needed
+
+            leftMotor1.setPower(power1);
+            leftMotor2.setPower(power2);
+            rightMotor1.setPower(-power1);
+            rightMotor2.setPower(-power2);
+
         } else if (rightTrigger > MIN_POWER && leftTrigger <= MIN_POWER) {
-            // Right trigger: left motors REVERSE, right motors FORWARD
-            leftMotor1.setPower(-rightTrigger);
-            leftMotor2.setPower(-rightTrigger);
-            rightMotor1.setPower(rightTrigger);
-            rightMotor2.setPower(rightTrigger);
+            // RIGHT TRIGGER: All 4 motors normal speed
+            double power = rightTrigger * rightTriggerMultiplier;
+            power = Math.min(1.0, Math.max(0.0, power));
+
+            leftMotor1.setPower(-power);
+            leftMotor2.setPower(-power);
+            rightMotor1.setPower(power);
+            rightMotor2.setPower(power);
+
         } else {
             stop();
         }
     }
 
-    // Set fixed power multiplier
-    public void setPowerMultiplier(double multiplier) {
-        this.powerMultiplier = Math.max(0.5, Math.min(2.0, multiplier));
+    // Set right trigger power multiplier (affects motor2 pair on left trigger if uncommented above)
+    public void setRightTriggerMultiplier(double multiplier) {
+        this.rightTriggerMultiplier = Math.max(0.5, Math.min(2.0, multiplier));
     }
 
-    // Get current power multiplier
-    public double getPowerMultiplier() {
-        return powerMultiplier;
+    public double getRightTriggerMultiplier() {
+        return rightTriggerMultiplier;
     }
 
-    // Full power shooting (uses max trigger value 1.0 * multiplier)
+    // Set left trigger motor1 speed (20% default)
+    public void setLeftTriggerMotor1Speed(double speed) {
+        // This would need to be not final to change it
+        // For now, it's fixed at 20%
+    }
+
+    // Max power shooting (right trigger direction)
     public void shootAtMaxPower() {
-        leftMotor1.setPower(1.0 * powerMultiplier);
-        leftMotor2.setPower(1.0 * powerMultiplier);
-        rightMotor1.setPower(-1.0 * powerMultiplier);
-        rightMotor2.setPower(-1.0 * powerMultiplier);
+        double power = 1.0 * rightTriggerMultiplier;
+        leftMotor1.setPower(-power);
+        leftMotor2.setPower(-power);
+        rightMotor1.setPower(power);
+        rightMotor2.setPower(power);
     }
 
-    // Stop all motors
     public void stop() {
         if (leftMotor1 != null) leftMotor1.setPower(0);
         if (leftMotor2 != null) leftMotor2.setPower(0);

@@ -20,7 +20,7 @@ public class KitBotOpMode extends OpMode {
     private boolean autoAimEnabled = false;
     private boolean fieldRelative = true;
     private double driveSpeed = 0.8;
-    private double flywheelPower = 1.5; // Fixed multiplier
+    private double rightTriggerMultiplier = 1.0;
 
     @Override
     public void init() {
@@ -29,14 +29,16 @@ public class KitBotOpMode extends OpMode {
         autoAim = new TurretAutoAim(hardwareMap);
 
         drive.setSpeedMultiplier(driveSpeed);
-        turret.setPowerMultiplier(flywheelPower);
+        turret.setRightTriggerMultiplier(rightTriggerMultiplier);
 
         buttonTimer.reset();
 
         telemetry.addLine("KitBot Initialized - 4 Motor Flywheel");
         telemetry.addData("Drive Mode", fieldRelative ? "Field Relative" : "Robot Relative");
         telemetry.addData("Drive Speed", String.format("%.0f%%", driveSpeed * 100));
-        telemetry.addData("Flywheel Power", String.format("%.0f%%", flywheelPower * 100));
+        telemetry.addData("Right Trigger Power", String.format("%.0f%%", rightTriggerMultiplier * 100));
+        telemetry.addLine("Left Trigger: Motor1=20%, Motor2=Variable");
+        telemetry.addLine("Right Trigger: All motors=Variable");
         telemetry.update();
     }
 
@@ -47,7 +49,7 @@ public class KitBotOpMode extends OpMode {
         double strafe = gamepad1.left_stick_x;
         double rotate = gamepad1.right_stick_x;
 
-        // Drive speed adjustment (optional)
+        // Drive speed adjustment
         if (gamepad1.dpad_up && buttonTimer.milliseconds() > 200) {
             driveSpeed = Math.min(1.0, driveSpeed + 0.05);
             drive.setSpeedMultiplier(driveSpeed);
@@ -59,15 +61,15 @@ public class KitBotOpMode extends OpMode {
             buttonTimer.reset();
         }
 
-        // Flywheel power adjustment (optional - set once, not during play)
+        // Right trigger power adjustment
         if (gamepad2.dpad_up && buttonTimer.milliseconds() > 200) {
-            flywheelPower = Math.min(2.0, flywheelPower + 0.1);
-            turret.setPowerMultiplier(flywheelPower);
+            rightTriggerMultiplier = Math.min(2.0, rightTriggerMultiplier + 0.1);
+            turret.setRightTriggerMultiplier(rightTriggerMultiplier);
             buttonTimer.reset();
         }
         if (gamepad2.dpad_down && buttonTimer.milliseconds() > 200) {
-            flywheelPower = Math.max(0.5, flywheelPower - 0.1);
-            turret.setPowerMultiplier(flywheelPower);
+            rightTriggerMultiplier = Math.max(0.5, rightTriggerMultiplier - 0.1);
+            turret.setRightTriggerMultiplier(rightTriggerMultiplier);
             buttonTimer.reset();
         }
 
@@ -84,11 +86,13 @@ public class KitBotOpMode extends OpMode {
             drive.drive(forward, strafe, rotate);
         }
 
-        // Turret control - TRIGGERS CONTROL SPEED DIRECTLY
-        double leftTrigger = gamepad2.left_trigger;  // 0 to 1
-        double rightTrigger = gamepad2.right_trigger; // 0 to 1
+        // Turret control
+        double leftTrigger = gamepad2.left_trigger;
+        double rightTrigger = gamepad2.right_trigger;
 
-        // The more you press trigger, the faster it goes
+        // The new runWithTriggers handles:
+        // - Left trigger: leftMotor1/rightMotor1 at 20%, leftMotor2/rightMotor2 at variable
+        // - Right trigger: all motors at variable speed
         turret.runWithTriggers(leftTrigger, rightTrigger);
 
         // Auto-aim toggle
@@ -116,12 +120,18 @@ public class KitBotOpMode extends OpMode {
         }
 
         // Quick manual pitch test
-        if (gamepad2.triangle) turret.setPitchAbsolute(1.0);
-        if (gamepad2.cross) turret.setPitchAbsolute(0.0);
+        if (gamepad2.triangle) {
+            turret.setPitchAbsolute(1.0);
+        } else if (gamepad2.cross) {
+            turret.setPitchAbsolute(0.0);
+        }
 
-        // Max power shooting (optional button)
+        // Max power shooting (right trigger direction)
         if (gamepad2.right_bumper) {
             turret.shootAtMaxPower();
+        } else if (!gamepad2.right_bumper && rightTrigger <= 0.05 && leftTrigger <= 0.05) {
+            // Only stop if no triggers or bumper are pressed
+            turret.stop();
         }
 
         // Reset heading
@@ -136,19 +146,30 @@ public class KitBotOpMode extends OpMode {
         telemetry.addData("Speed", String.format("%.0f%%", driveSpeed * 100));
         telemetry.addData("Heading", String.format("%.1f°", drive.getHeadingDegrees()));
 
-        telemetry.addLine("\n=== FLYWHEEL ===");
-        telemetry.addData("Power Multiplier", String.format("%.0f%%", flywheelPower * 100));
+        telemetry.addLine("\n=== 4-MOTOR FLYWHEEL ===");
+        telemetry.addData("Right Trigger Power", String.format("%.0f%%", rightTriggerMultiplier * 100));
         telemetry.addData("Left Trigger", String.format("%.0f%%", leftTrigger * 100));
         telemetry.addData("Right Trigger", String.format("%.0f%%", rightTrigger * 100));
-        telemetry.addData("Actual Speed", String.format("%.0f%%", Math.max(leftTrigger, rightTrigger) * flywheelPower * 100));
-        telemetry.addData("Auto Aim", autoAimEnabled ? "ENABLED" : "DISABLED");
-        telemetry.addData("Pitch Pos", String.format("%.3f", turret.getPitchPosition()));
+
+        telemetry.addLine("\nMotor Speeds (Left Trigger):");
+        telemetry.addData("leftMotor1/rightMotor1", "20% fixed");
+        telemetry.addData("leftMotor2/rightMotor2", String.format("%.0f%%", leftTrigger * 100));
+
+        telemetry.addLine("\nMotor Speeds (Right Trigger):");
+        telemetry.addData("All 4 motors", String.format("%.0f%%", rightTrigger * rightTriggerMultiplier * 100));
+
+        telemetry.addLine("\n=== TURRET ===");
+        telemetry.addData("Auto Aim", autoAimEnabled ? "ENABLED (Square)" : "DISABLED (Circle)");
+        telemetry.addData("Pitch Position", String.format("%.3f", turret.getPitchPosition()));
 
         telemetry.addLine("\n=== CONTROLS ===");
-        telemetry.addLine("Triggers: Control flywheel speed (more press = faster)");
-        telemetry.addLine("Back: Toggle field/robot mode");
-        telemetry.addLine("Start: Reset heading");
-        telemetry.addLine("Dpad: Adjust drive/flywheel power");
+        telemetry.addLine("Gamepad1 Back: Toggle field/robot mode");
+        telemetry.addLine("Gamepad1 Start: Reset heading");
+        telemetry.addLine("Gamepad1 Dpad: Adjust drive speed");
+        telemetry.addLine("Gamepad2 Dpad: Adjust right trigger power");
+        telemetry.addLine("Gamepad2 Square/Circle: Toggle auto-aim");
+        telemetry.addLine("Gamepad2 Right Bumper: Max power shoot");
+        telemetry.addLine("Gamepad2 Triggers: Control flywheel speed");
         telemetry.update();
     }
 }
